@@ -1,32 +1,19 @@
-// Dashboard.js (modified)
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
 
-const Dashboard = () => {
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const token = localStorage.getItem('access_token');
-    if (!token) {
-      navigate('/login');
-    }
-  }, [navigate]);
-
+function Dashboard() {
   return (
-    <div>
-      <header>
-        <nav>
-          <h1>Dashboard</h1>
-        </nav>
+    <div className="dashboard-container">
+      <header className="header">
+        <h1>Dashboard</h1>
       </header>
-      <main>
+      <main className="main">
         <h2>Welcome to the Dashboard</h2>
       </main>
-      <footer>
+      <footer className="footer">
         <p>&copy; 2023 Your Company</p>
       </footer>
     </div>
   );
-};
+}
 
 export default Dashboard;

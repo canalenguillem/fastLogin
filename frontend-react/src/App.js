@@ -1,18 +1,16 @@
 import React from 'react';
-import './App.css';import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import Login from './components/LoginForm';
+import { Route, Routes } from 'react-router-dom';
+import LoginForm from './components/LoginForm';
 import Dashboard from './components/Dashboard';
+import './App.css';
 
-const App = () => {
+function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="*" element={<Navigate to="/login" />} />
-      </Routes>
-    </Router>
+    <Routes>
+      <Route path="/login" element={<LoginForm />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+    </Routes>
   );
-};
+}
 
 export default App;
