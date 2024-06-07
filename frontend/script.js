@@ -168,7 +168,7 @@ $(document).ready(function() {
             const token = localStorage.getItem('access_token');
 
             $.ajax({
-                url: 'http://localhost:8000/create_user', // URL del endpoint para crear usuarios
+                url: 'http://localhost:8000/register_user', // URL del endpoint para crear usuarios
                 type: 'POST',
                 contentType: 'application/json',
                 headers: {
