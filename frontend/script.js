@@ -20,9 +20,7 @@ $(document).ready(function() {
                 console.log('Login successful:', response);
                 // Guardar el token en localStorage
                 localStorage.setItem('access_token', response.access_token);
-                // Mostrar el menú y ocultar el formulario de login
-                showMenu();
-                // Obtener información del usuario
+                // Obtener información del usuario y mostrar el menú
                 getUserInfo();
             },
             error: function(xhr, status, error) {
@@ -40,8 +38,9 @@ $(document).ready(function() {
     function checkLogin() {
         const token = localStorage.getItem('access_token');
         if (token) {
-            showMenu();
             getUserInfo();
+        } else {
+            showLogin();
         }
     }
 
@@ -74,6 +73,7 @@ $(document).ready(function() {
                 console.log('User info:', response);
                 // Mostrar la información del usuario en la página
                 $('#user-info').text(`Logged in as: ${response.username} (${response.email})`);
+                showMenu();
             },
             error: function(xhr, status, error) {
                 console.error('Failed to fetch user info:', xhr.responseText);
