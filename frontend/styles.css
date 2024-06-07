@@ -117,7 +117,7 @@ form button:hover {
     background-color: #45a049;
 }
 
-.footer {
+footer {
     background-color: #4CAF50;
     padding: 10px 0;
     text-align: center;
@@ -125,4 +125,10 @@ form button:hover {
     position: fixed;
     bottom: 0;
     width: 100%;
+}
+
+.form-container{
+    padding: 100px 0;
+    max-width: 768px;
+    margin: 0 auto;
 }

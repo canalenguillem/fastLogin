@@ -49,7 +49,7 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
         username=user.username, 
         email=user.email, 
         hashed_password=auth.get_password_hash(user.password),
-        role_id=2  # Asignar rol de usuario por defecto
+        role_id=user.role_id  # Asignar rol de usuario por defecto
     )
     db.add(new_user)
     db.commit()
