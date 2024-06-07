@@ -1,19 +1,32 @@
-# schemas.py
 from pydantic import BaseModel
 
-# Esquemas
+class RoleBase(BaseModel):
+    name: str
+    description: str
+
+class RoleCreate(RoleBase):
+    pass
+
+class Role(RoleBase):
+    id: int
+
+    class Config:
+        orm_mode = True
+
 class UserCreate(BaseModel):
     username: str
     email: str
     password: str
+    role_id: int  # Añade el campo role_id
 
 class User(BaseModel):
     id: int
     username: str
     email: str
+    role: Role  # Añade la relación con Role
 
     class Config:
-        from_attributes = True  # Actualizado para Pydantic V2
+        orm_mode = True
 
 class Token(BaseModel):
     access_token: str

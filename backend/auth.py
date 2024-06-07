@@ -64,3 +64,8 @@ def get_current_user(db: Session = Depends(database.get_db), token: str = Depend
     if user is None:
         raise credentials_exception
     return user
+
+def get_current_admin_user(current_user: models.User = Depends(get_current_user)):
+    if current_user.role.name != "admin":
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    return current_user
