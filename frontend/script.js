@@ -45,6 +45,11 @@ $(document).ready(function() {
         showCreateUserForm();
     });
 
+    $('#register-link').click(function(event) {
+        event.preventDefault();
+        showRegisterForm();
+    });
+
     function checkLogin() {
         const token = localStorage.getItem('access_token');
         if (token) {
@@ -56,16 +61,29 @@ $(document).ready(function() {
 
     function showMenu() {
         $('#login-box').hide();
+        $('#register-box').hide();
         $('#menu-header').show();
         $('#main-content').show();
         $('#footer').show();
     }
 
     function showLogin() {
+        $('#login-form')[0].reset(); // Limpiar el formulario de login
         $('#login-box').show();
+        $('#register-box').hide();
         $('#menu-header').hide();
         $('#main-content').hide();
         $('#footer').hide();
+        clearMainContent(); // Limpiar el contenido principal al mostrar el formulario de login
+    }
+
+    function showRegister() {
+        $('#login-box').hide();
+        $('#register-box').show();
+        $('#menu-header').hide();
+        $('#main-content').hide();
+        $('#footer').hide();
+        clearMainContent(); // Limpiar el contenido principal al mostrar el formulario de registro
     }
 
     function logout() {
@@ -167,5 +185,53 @@ $(document).ready(function() {
                 }
             });
         });
+    }
+
+    function showRegisterForm() {
+        const formHtml = `
+            <div class="form-container">
+                <h2>Register</h2>
+                <form id="register-form">
+                    <label for="register-username">Username:</label>
+                    <input type="text" id="register-username" name="username" required>
+                    <br>
+                    <label for="register-email">Email:</label>
+                    <input type="email" id="register-email" name="email" required>
+                    <br>
+                    <label for="register-password">Password:</label>
+                    <input type="password" id="register-password" name="password" required>
+                    <br>
+                    <button type="submit">Register</button>
+                </form>
+            </div>
+        `;
+        $('#main-content').html(formHtml);
+
+        $('#register-form').submit(function(event) {
+            event.preventDefault();
+            const newUser = {
+                username: $('#register-username').val(),
+                email: $('#register-email').val(),
+                password: $('#register-password').val(),
+                role_id: 2 // Rol de usuario por defecto
+            };
+
+            $.ajax({
+                url: 'http://localhost:8000/register_user', // URL del endpoint para registrar usuarios
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(newUser),
+                success: function(response) {
+                    console.log('User registered successfully:', response);
+                    alert('User registered successfully');
+                    showLogin();
+                },
+                error: function(xhr, status, error) {
+                    console.error('Failed to register user:', xhr.responseText);
+                    alert('Failed to register user');
+                }
+            });
+        });
+        showRegister();
     }
 });
