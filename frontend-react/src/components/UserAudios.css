@@ -1,0 +1,35 @@
+/* UserAudios.css */
+.user-audios {
+    padding: 10px;
+  }
+  
+  .audio-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+  }
+  
+  .audio-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 1px solid #ccc;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+  }
+  
+  .audio-item audio {
+    width: 100%;
+  }
+  
+  .audio-item button {
+    margin-top: 5px;
+    background-color: red;
+    color: white;
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  

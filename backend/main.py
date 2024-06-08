@@ -5,18 +5,24 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import File, UploadFile
 import shutil
+from typing import List
 
 
 from sqlalchemy.orm import Session
 import models, database, auth
 from schemas import User, UserCreate, Token,Audio
 from auth import get_current_user
+from fastapi.staticfiles import StaticFiles
 
 from libs.audio_utils import save_and_convert_audio,calculate_hash
 
 
 
 app = FastAPI()
+
+# Montar el directorio de uploads
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
 # Configurar CORS
 origins = [
     "http://localhost",  # Ajusta esto según sea necesario
@@ -110,3 +116,22 @@ async def upload_audio(file: UploadFile = File(...), db: Session = Depends(datab
     db.commit()
     db.refresh(audio_db)
     return audio_db
+
+@app.get("/user-audios/", response_model=List[Audio])
+async def get_user_audios(db: Session = Depends(database.get_db), current_user: models.User = Depends(get_current_user)):
+    return db.query(models.Audio).filter(models.Audio.owner_id == current_user.id).all()
+
+@app.delete("/delete-audio/{audio_id}", response_model=Audio)
+async def delete_audio(audio_id: int, db: Session = Depends(database.get_db), current_user: models.User = Depends(get_current_user)):
+    audio = db.query(models.Audio).filter(models.Audio.id == audio_id, models.Audio.owner_id == current_user.id).first()
+    if not audio:
+        raise HTTPException(status_code=404, detail="Audio not found")
+
+    # Delete the file from the file system
+    if os.path.exists(audio.file_location):
+        os.remove(audio.file_location)
+
+    # Delete the record from the database
+    db.delete(audio)
+    db.commit()
+    return audio

@@ -1,7 +1,8 @@
 // RecordAudio.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Layout from './Layout';
+import UserAudios from './UserAudios';  // Importa el nuevo componente
 import './RecordAudio.css';
 
 const RecordAudio = () => {
@@ -9,8 +10,26 @@ const RecordAudio = () => {
   const [recording, setRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const [audioBlob, setAudioBlob] = useState(null);
-  const [isUploaded, setIsUploaded] = useState(false); // Nuevo estado
+  const [isUploaded, setIsUploaded] = useState(false);
+  const [audios, setAudios] = useState([]);
   const token = localStorage.getItem('access_token');
+
+  useEffect(() => {
+    fetchAudios();
+  }, []);
+
+  const fetchAudios = async () => {
+    try {
+      const response = await axios.get('http://localhost:8000/user-audios/', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      setAudios(response.data);
+    } catch (error) {
+      console.error('Error fetching audios:', error);
+    }
+  };
 
   const startRecording = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -43,8 +62,22 @@ const RecordAudio = () => {
       });
       console.log('Audio uploaded successfully:', response.data);
       setIsUploaded(true); // Deshabilitar el botón de subida
+      fetchAudios(); // Refresh the list after uploading
     } catch (error) {
       console.error('Error uploading audio:', error);
+    }
+  };
+
+  const deleteAudio = async (audioId) => {
+    try {
+      await axios.delete(`http://localhost:8000/delete-audio/${audioId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      fetchAudios();  // Refresh the list after deletion
+    } catch (error) {
+      console.error('Error deleting audio:', error);
     }
   };
 
@@ -66,6 +99,8 @@ const RecordAudio = () => {
           )}
         </div>
       </div>
+
+      <UserAudios audios={audios} deleteAudio={deleteAudio} />
     </Layout>
   );
 };
