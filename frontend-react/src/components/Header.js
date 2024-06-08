@@ -16,6 +16,7 @@ const Header = ({ user, onLogout }) => {
           <ul className="nav-links">
             {user.role.name === 'admin' && <li><Link to="/create-user">Create User</Link></li>}
             <li><Link to="/record-audio">Record Audio</Link></li>
+            <li><Link to="/record-video">Record Video</Link></li>
           </ul>
         </nav>
       </div>

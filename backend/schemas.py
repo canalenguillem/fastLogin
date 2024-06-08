@@ -45,3 +45,13 @@ class Audio(AudioBase):
 
     class Config:
         orm_mode = True
+        
+        
+class Video(BaseModel):
+    id: int
+    filename: str
+    file_location: str
+    owner_id: int
+
+    class Config:
+        orm_mode = True

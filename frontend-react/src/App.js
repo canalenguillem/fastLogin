@@ -6,6 +6,7 @@ import LoginForm from './components/LoginForm';
 import Dashboard from './components/Dashboard';
 import CreateUser from './components/CreateUser';
 import RecordAudio from './components/RecordAudio';
+import RecordVideo from './components/RecordVideo';
 import Header from './components/Header';
 import './App.css';
 
@@ -54,6 +55,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/create-user" element={<CreateUser />} />
         <Route path="/record-audio" element={<RecordAudio />} />
+        <Route path="/record-video" element={<RecordVideo />} />
       </Routes>
     </>
   );

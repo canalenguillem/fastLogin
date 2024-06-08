@@ -10,18 +10,28 @@ from typing import List
 
 from sqlalchemy.orm import Session
 import models, database, auth
-from schemas import User, UserCreate, Token,Audio
+from schemas import User, UserCreate, Token,Audio,Video
 from auth import get_current_user
 from fastapi.staticfiles import StaticFiles
 
 from libs.audio_utils import save_and_convert_audio,calculate_hash
+from libs.video_utils import save_and_convert_video, calculate_hash
+
 
 
 
 app = FastAPI()
 
+# Verificar y crear la carpeta videos si no existe
+if not os.path.exists('uploads/videos'):
+    os.makedirs('uploads/videos')
+    
+    
 # Montar el directorio de uploads
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+# Montar el directorio de videos
+app.mount("/uploads/videos", StaticFiles(directory="uploads/videos"), name="videos")
+
 
 # Configurar CORS
 origins = [
@@ -121,6 +131,12 @@ async def upload_audio(file: UploadFile = File(...), db: Session = Depends(datab
 async def get_user_audios(db: Session = Depends(database.get_db), current_user: models.User = Depends(get_current_user)):
     return db.query(models.Audio).filter(models.Audio.owner_id == current_user.id).all()
 
+@app.get("/user-videos/")
+def get_user_videos(db: Session = Depends(database.get_db), current_user: models.User = Depends(get_current_user)):
+    print("entro en la funcion de get_user_videos")
+    videos = db.query(models.Video).filter(models.Video.owner_id == current_user.id).all()
+    return videos
+
 @app.delete("/delete-audio/{audio_id}", response_model=Audio)
 async def delete_audio(audio_id: int, db: Session = Depends(database.get_db), current_user: models.User = Depends(get_current_user)):
     audio = db.query(models.Audio).filter(models.Audio.id == audio_id, models.Audio.owner_id == current_user.id).first()
@@ -135,3 +151,47 @@ async def delete_audio(audio_id: int, db: Session = Depends(database.get_db), cu
     db.delete(audio)
     db.commit()
     return audio
+
+
+@app.post("/upload-video/", response_model=Video)
+async def upload_video(file: UploadFile = File(...), db: Session = Depends(database.get_db), current_user: models.User = Depends(auth.get_current_user)):
+    file_content = await file.read()
+
+    # Calcular hash
+    file_hash = calculate_hash(file_content)
+    
+    # Verificar si el archivo ya existe por hash
+    existing_video = db.query(models.Video).filter(models.Video.filename.like(f"%{file_hash}%")).first()
+    if existing_video:
+        raise HTTPException(status_code=400, detail="File already uploaded")
+
+    # Guardar y convertir el video
+    new_filename, file_location = save_and_convert_video(file_content, file.filename)
+
+    # Guardar en la base de datos
+    video_db = models.Video(filename=new_filename, file_location=file_location, owner_id=current_user.id)
+    db.add(video_db)
+    db.commit()
+    db.refresh(video_db)
+    return video_db
+
+
+
+# Ruta para eliminar un video
+@app.delete("/delete-video/{video_id}")
+async def delete_video(video_id: int, db: Session = Depends(database.get_db), current_user: models.User = Depends(auth.get_current_user)):
+    video = db.query(models.Video).filter(models.Video.id == video_id, models.Video.owner_id == current_user.id).first()
+    if not video:
+        raise HTTPException(status_code=404, detail="Video not found")
+    
+    # Eliminar el archivo de video del sistema de archivos
+    try:
+        os.remove(video.file_location)
+    except FileNotFoundError:
+        pass
+
+    # Eliminar el registro de la base de datos
+    db.delete(video)
+    db.commit()
+
+    return {"message": "Video deleted successfully"}
