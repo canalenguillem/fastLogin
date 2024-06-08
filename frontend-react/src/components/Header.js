@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 
 const Header = () => {
@@ -16,7 +17,10 @@ const Header = () => {
         <h1>Dashboard</h1>
         <nav className="nav-menu">
           {user && user.role.name === "admin" && (
-            <button onClick={() => window.location.href = '/create-user'}>Create User</button>
+            <>
+              <Link to="/create-user">Create User</Link>
+              <Link to="/record-audio">Record Audio</Link>
+            </>
           )}
         </nav>
         <div className="user-info">

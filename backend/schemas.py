@@ -31,3 +31,17 @@ class User(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+    
+class AudioBase(BaseModel):
+    filename: str
+    file_location: str
+
+class AudioCreate(AudioBase):
+    pass
+
+class Audio(AudioBase):
+    id: int
+    owner_id: int
+
+    class Config:
+        orm_mode = True

@@ -1,11 +1,20 @@
+import os
+
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import File, UploadFile
+import shutil
 
 
 from sqlalchemy.orm import Session
 import models, database, auth
-from schemas import User, UserCreate, Token
+from schemas import User, UserCreate, Token,Audio
+from auth import get_current_user
+
+from libs.audio_utils import save_and_convert_audio,calculate_hash
+
+
 
 app = FastAPI()
 # Configurar CORS
@@ -77,3 +86,27 @@ def read_users_me(current_user: User = Depends(auth.get_current_user)):
 def get_roles(db: Session = Depends(database.get_db)):
     roles = db.query(models.Role).all()
     return roles
+
+
+@app.post("/upload-audio/", response_model=Audio)
+async def upload_audio(file: UploadFile = File(...), db: Session = Depends(database.get_db), current_user: models.User = Depends(get_current_user)):
+    print("leer contenido")
+    file_content = await file.read()
+
+    print("calcular hash")
+    file_hash = calculate_hash(file_content)
+    
+    # Verificar si el archivo ya existe por hash
+    existing_audio = db.query(models.Audio).filter(models.Audio.filename.like(f"{file_hash}%")).first()
+    if existing_audio:
+        raise HTTPException(status_code=400, detail="File already uploaded")
+
+    print("funcion modulo utilidades")
+    new_filename, file_location = save_and_convert_audio(file_content, file.filename)
+
+    print("guardar en bbdd")
+    audio_db = models.Audio(filename=new_filename, file_location=file_location, owner_id=current_user.id)
+    db.add(audio_db)
+    db.commit()
+    db.refresh(audio_db)
+    return audio_db
