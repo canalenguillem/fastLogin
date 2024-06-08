@@ -72,3 +72,8 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
 @app.get("/users/me/", response_model=User)
 def read_users_me(current_user: User = Depends(auth.get_current_user)):
     return current_user
+
+@app.get("/roles/")
+def get_roles(db: Session = Depends(database.get_db)):
+    roles = db.query(models.Role).all()
+    return roles

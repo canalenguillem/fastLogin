@@ -1,21 +1,28 @@
+// LoginForm.js
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../AuthContext';
 
 function LoginForm() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
             const response = await axios.post('http://localhost:8000/token', new URLSearchParams({
-                username: username,
-                password: password
+                username,
+                password
             }));
-            console.log('Login successful:', response.data);
-            localStorage.setItem('access_token', response.data.access_token);
+            const userResponse = await axios.get('http://localhost:8000/users/me/', {
+                headers: {
+                    'Authorization': `Bearer ${response.data.access_token}`
+                }
+            });
+            login(response.data.access_token, userResponse.data);
             navigate('/dashboard');
         } catch (error) {
             console.error('Login failed:', error);

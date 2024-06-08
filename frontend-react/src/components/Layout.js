@@ -1,18 +1,18 @@
-// Dashboard.js
+// Layout.js
 import React from 'react';
 import Header from './Header';
 import Footer from './Footer';
 
-const Dashboard = () => {
+const Layout = ({ children }) => {
   return (
     <div>
       <Header />
       <main>
-        <h2>Welcome to the Dashboard</h2>
+        {children}
       </main>
       <Footer />
     </div>
   );
 };
 
-export default Dashboard;
+export default Layout;
