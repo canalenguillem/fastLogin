@@ -1,40 +1,34 @@
-# video_utils.py
-# video_utils.py
-import os
 import subprocess
-from datetime import datetime
 import hashlib
+import os
+import time
 
-def calculate_hash(file_content):
-    return hashlib.md5(file_content).hexdigest()[:10]
+def calculate_hash(content):
+    return hashlib.md5(content).hexdigest()[:10]
 
-def save_and_convert_video(file_content, filename):
-    # Crear un nombre de archivo único utilizando un hash
-    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
-    hash_obj = hashlib.sha256(file_content)
-    short_hash = hash_obj.hexdigest()[:10]
-    new_filename = f"{timestamp}_{short_hash}.mp4"
-    temp_location = f"uploads/videos/temp_{timestamp}_{short_hash}.webm"
-    
-    # Guardar el archivo temporalmente
-    with open(temp_location, "wb") as temp_file:
-        temp_file.write(file_content)
-    
+def save_and_convert_video(file_content, original_filename):
+    timestamp = time.strftime("%Y%m%d%H%M%S")
+    file_hash = calculate_hash(file_content)
+    temp_filename = f"temp_{timestamp}_{file_hash}.webm"
+    temp_location = f"uploads/videos/{temp_filename}"
+
+    with open(temp_location, "wb") as f:
+        f.write(file_content)
+
+    # Define the output filename and location
+    new_filename = f"{timestamp}_{file_hash}.mp4"
+    output_location = f"uploads/videos/{new_filename}"
+
+    # Convert the video using ffmpeg
     try:
-        # Convertir el archivo a mp4 utilizando ffmpeg
-        output_location = f"uploads/videos/{new_filename}"
-        command = [
-            "ffmpeg", "-i", temp_location,
-            "-c:v", "libx264", "-c:a", "aac",
-            output_location
-        ]
-        subprocess.run(command, check=True)
-    except Exception as e:
-        print(f"Error converting video: {e}")
-        os.remove(temp_location)
-        raise e
+        subprocess.run([
+            "ffmpeg", "-i", temp_location, "-c:v", "libx264", "-crf", "23",
+            "-c:a", "aac", "-b:a", "192k", output_location
+        ], check=True)
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"Error converting video: {e}")
 
-    # Eliminar el archivo temporal
+    # Remove the temporary file
     os.remove(temp_location)
 
     return new_filename, output_location

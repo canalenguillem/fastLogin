@@ -30,6 +30,7 @@ frontend-react/node_modules/.bin/jiti
 *.mp3
 *.mp4
 *.db
+*.webm
 alembic
 *.ini
 env.*
