@@ -1,32 +1,27 @@
-import React, { useEffect } from 'react';
+// Header.js
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../AuthContext';
+import './Header.css';
 
-const Header = () => {
-  const { user, logout } = useAuth();
-
-  useEffect(() => {
-    if (user) {
-      console.log('User role:', user.role);
-    }
-  }, [user]);
+const Header = ({ user, onLogout }) => {
+  if (!user || !user.role) {
+    return null; // or a loading spinner
+  }
 
   return (
     <header className="header">
       <div className="header-content">
         <h1>Dashboard</h1>
-        <nav className="nav-menu">
-          {user && user.role.name === "admin" && (
-            <>
-              <Link to="/create-user">Create User</Link>
-              <Link to="/record-audio">Record Audio</Link>
-            </>
-          )}
+        <nav>
+          <ul className="nav-links">
+            {user.role.name === 'admin' && <li><Link to="/create-user">Create User</Link></li>}
+            <li><Link to="/record-audio">Record Audio</Link></li>
+          </ul>
         </nav>
-        <div className="user-info">
-          {user && <span>{user.username}</span>}
-          <button onClick={logout}>Logout</button>
-        </div>
+      </div>
+      <div className="user-info">
+        <span>{user.username}</span>
+        <button onClick={onLogout}>Logout</button>
       </div>
     </header>
   );
