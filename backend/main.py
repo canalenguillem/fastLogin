@@ -1,3 +1,4 @@
+#uvicorn main:app --reload
 import os
 
 from fastapi import FastAPI, Depends, HTTPException, status
@@ -16,8 +17,15 @@ from fastapi.staticfiles import StaticFiles
 
 from libs.audio_utils import save_and_convert_audio,calculate_hash
 from libs.video_utils import save_and_convert_video, calculate_hash
+import functions.openai_requests as openai_requests
+from functions.openai_requests import convert_audio_to_text
+import functions.text_to_speech as text_to_speech
+from starlette.responses import StreamingResponse
 
+from pydantic import BaseModel
 
+class AudioToTextRequest(BaseModel):
+    filename: str
 
 
 app = FastAPI()
@@ -129,13 +137,13 @@ async def upload_audio(file: UploadFile = File(...), db: Session = Depends(datab
 
 @app.get("/user-audios/", response_model=List[Audio])
 async def get_user_audios(db: Session = Depends(database.get_db), current_user: models.User = Depends(get_current_user)):
-    return db.query(models.Audio).filter(models.Audio.owner_id == current_user.id).all()
+    return db.query(models.Audio).filter(models.Audio.owner_id == current_user.id).order_by(models.Audio.id.desc()).all()
 
-@app.get("/user-videos/")
-def get_user_videos(db: Session = Depends(database.get_db), current_user: models.User = Depends(get_current_user)):
-    print("entro en la funcion de get_user_videos")
-    videos = db.query(models.Video).filter(models.Video.owner_id == current_user.id).all()
+@app.get("/user-videos/", response_model=List[Video])
+def get_user_videos(current_user: models.User = Depends(get_current_user), db: Session = Depends(database.get_db)):
+    videos = db.query(models.Video).filter(models.Video.owner_id == current_user.id).order_by(models.Video.id.desc()).all()
     return videos
+
 
 @app.delete("/delete-audio/{audio_id}", response_model=Audio)
 async def delete_audio(audio_id: int, db: Session = Depends(database.get_db), current_user: models.User = Depends(get_current_user)):
@@ -195,3 +203,43 @@ async def delete_video(video_id: int, db: Session = Depends(database.get_db), cu
     db.commit()
 
     return {"message": "Video deleted successfully"}
+
+@app.post("/convert-audio/")
+async def convert_audio(file: UploadFile = File(...), db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    try:
+        file_content = await file.read()
+        message_text = openai_requests.convert_audio_to_text(file_content)
+        return {"text": message_text}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@app.post("/chat-response/")
+async def chat_response(user_input: str, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    try:
+        response_text = openai_requests.get_chat_response(user_input)
+        openai_requests.store_messages(user_input, response_text)
+        return {"response": response_text}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/text-to-speech/")
+async def text_to_speech_endpoint(text: str, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    try:
+        audio_content = text_to_speech.convert_text_to_speech(text)
+        return StreamingResponse(io.BytesIO(audio_content), media_type="audio/mpeg")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@app.post("/convert-audio-to-text/")
+async def convert_audio_to_text_endpoint(request: AudioToTextRequest, db: Session = Depends(database.get_db), current_user: models.User = Depends(get_current_user)):
+    audio_path = f"uploads/{request.filename}"
+    print(f"audio file recibido {audio_path}")
+    try:
+        # with open(audio_path, "rb") as audio_file:
+        #     transcript = openai.Audio.transcriptions.create(file=audio_file, model="whisper-1")
+        # return {"text": transcript['text']}
+        message=convert_audio_to_text(audio_path)
+        return {"text": message}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error converting audio: {e}")
+

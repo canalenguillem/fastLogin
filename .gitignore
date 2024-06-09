@@ -34,3 +34,4 @@ frontend-react/node_modules/.bin/jiti
 alembic
 *.ini
 env.*
+.env
